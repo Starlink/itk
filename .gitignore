@@ -1,0 +1,10 @@
+*.o
+*~
+Makefile
+autom4te.cache/
+config.log
+config.status
+configure.lineno
+itkConfig.sh
+libitk3.4.*
+pkgIndex.tcl

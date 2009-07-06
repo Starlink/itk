@@ -55,13 +55,14 @@ itcl::class itk::Toplevel {
               toplevel $itk_hull -class [namespace tail [info class]] \
                  -use $gaiauseid
            } {
-              keep -background -cursor -takefocus
+              keep -menu -background -cursor -takefocus
            }
         } else {
            itk_component add hull {
               toplevel $itk_hull -class [namespace tail [info class]]
            } {
-            keep -menu -background -cursor -takefocus
+              keep -menu -background -cursor -takefocus
+           }
         }
         set gaiauseid {}
         bind itk-delete-$itk_hull <Destroy> [list itcl::delete object $this]
