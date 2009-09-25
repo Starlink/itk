@@ -8,3 +8,5 @@ configure.lineno
 itkConfig.sh
 libitk3.4.*
 pkgIndex.tcl
+*.dylib
+*.dSYM
