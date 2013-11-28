@@ -33,7 +33,6 @@ itcl::class itk::Toplevel {
     inherit itk::Archetype
 
     constructor {args} {
-
         #
         #  Create a toplevel window with the same name as this object
         #
@@ -85,6 +84,6 @@ itcl::class itk::Toplevel {
     itk_option define -title title Title "" {
         wm title $itk_hull $itk_option(-title)
     }
-   
+
     private variable itk_hull ""
 }
