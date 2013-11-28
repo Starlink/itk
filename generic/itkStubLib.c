@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: $Id: itkStubLib.c,v 1.7 2003/12/24 03:38:03 davygrvy Exp $
  */
 
 /*
@@ -26,13 +24,12 @@
 #undef USE_TCL_STUB_PROCS
 
 #ifndef USE_ITK_STUBS
-#define USE_ITK_STUBS
+#define USE_ITK_STUBS 1
 #endif
 #undef USE_ITK_STUB_PROCS
+#undef BUILD_itk
 
 #include "itk.h"
-
-ItkStubs *itkStubsPtr;
 
 
 /*
@@ -54,16 +51,15 @@ ItkStubs *itkStubsPtr;
  */
 
 CONST char *
-Itk_InitStubs (interp, version, exact)
-    Tcl_Interp *interp;
-    CONST char *version;
-    int exact;
+Itk_InitStubs (
+    Tcl_Interp *interp,
+    const char *version,
+    int exact)
 {
     CONST char *actualVersion;
     
-    actualVersion = Tcl_PkgRequireEx(interp, "Itk", (CONST84 char *)version, exact,
-        (ClientData *) &itkStubsPtr);
-
+    actualVersion = Tcl_PkgRequireEx(interp, "itk", (const char *)version,
+            exact, (ClientData *) &itkStubsPtr);
     if (actualVersion == NULL) {
 	itkStubsPtr = NULL;
 	return NULL;

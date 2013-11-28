@@ -10,7 +10,7 @@
 # so you can encode the package version directly into the source files.
 #-----------------------------------------------------------------------
 
-AC_INIT([itk], [3.4])
+AC_INIT([itk], [4.0.0])
 
 #--------------------------------------------------------------------
 # Call TEA_INIT as the first TEA_ macro to set up initial vars.
@@ -18,7 +18,7 @@ AC_INIT([itk], [3.4])
 # as well as PKG_LIB_FILE and PKG_STUB_LIB_FILE.
 #--------------------------------------------------------------------
 
-TEA_INIT([3.6])
+TEA_INIT([3.9])
 
 AC_PROG_LN_S
 CONFIG_CLEAN_FILES=
@@ -77,21 +77,26 @@ TEA_SETUP_COMPILER
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([itk_cmds.c
-		itk_option.c
-		itk_archetype.c
-		itk_util.c
-		itkStubInit.c])
-TEA_ADD_HEADERS([generic/itk.h generic/itkDecls.h])
+TEA_ADD_SOURCES([
+                itkArchBase.c
+	        itkArchetype.c
+	        itkBase.c
+                itkCmd.c
+                itkHelpers.c
+                itkOption.c
+	        itkUtil.c
+                itkStubInit.c
+                ])
+TEA_ADD_HEADERS([generic/itk.h generic/itkInt.h])
 TEA_ADD_INCLUDES([${ITCL_INCLUDES} -I\"`${CYGPATH} ${srcdir}/generic`\"])
 TEA_ADD_LIBS([])
 TEA_ADD_CFLAGS([])
 #TEA_ADD_STUB_SOURCES([itkStubLib.c])
 TEA_ADD_TCL_SOURCES([library/Archetype.itk
-		library/Toplevel.itk
-		library/Widget.itk
-		library/itk.tcl
-		library/tclIndex])
+                library/Toplevel.itk
+                library/Widget.itk
+                library/itk.tcl
+                library/tclIndex])
 
 #--------------------------------------------------------------------
 # __CHANGE__
@@ -111,14 +116,8 @@ TEA_ADD_TCL_SOURCES([library/Archetype.itk
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    AC_DEFINE(BUILD_itk)
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
     TEA_ADD_SOURCES([dllEntryPoint.c])
-else
-    CLEANFILES=
 fi
-
-AC_SUBST(CLEANFILES)
 
 #--------------------------------------------------------------------
 # __CHANGE__
@@ -200,17 +199,6 @@ fi
 #--------------------------------------------------------------------
 
 TEA_MAKE_LIB
-
-#--------------------------------------------------------------------
-# __CHANGE__
-# Add platform libs to LIBS or SHLIB_LD_LIBS as necessary.
-#--------------------------------------------------------------------
-
-if test "${TEA_PLATFORM}" = "windows" -a "$GCC" != "yes" ; then
-    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \"`${CYGPATH} ${itcl_STUB_LIB_PATH}`\""
-else
-    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} ${itcl_STUB_LIB_SPEC}"
-fi
 
 #--------------------------------------------------------------------
 # __CHANGE__
