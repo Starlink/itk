@@ -7,8 +7,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: $Id: itkStubInit.c,v 1.3.2.1 2007/09/08 12:03:23 wiede Exp $
  */
 
 #include "itkInt.h"
@@ -23,9 +21,11 @@
  * below should be made in the generic/itk.decls script.
  */
 
+MODULE_SCOPE const ItkStubs itkStubs;
+
 /* !BEGIN!: Do not edit below this line. */
 
-ItkIntStubs itkIntStubs = {
+static const ItkIntStubs itkIntStubs = {
     TCL_STUB_MAGIC,
     ITKINT_STUBS_EPOCH,
     ITKINT_STUBS_REVISION,
@@ -50,11 +50,11 @@ ItkIntStubs itkIntStubs = {
     Itk_OptListRemove, /* 17 */
 };
 
-static ItkStubHooks itkStubHooks = {
+static const ItkStubHooks itkStubHooks = {
     &itkIntStubs
 };
 
-ItkStubs itkStubs = {
+const ItkStubs itkStubs = {
     TCL_STUB_MAGIC,
     ITK_STUBS_EPOCH,
     ITK_STUBS_REVISION,
@@ -76,8 +76,3 @@ ItkStubs itkStubs = {
 };
 
 /* !END!: Do not edit above this line. */
-
-struct ItkStubAPI itkStubAPI = {
-    &itkStubs,
-    &itkIntStubs
-};

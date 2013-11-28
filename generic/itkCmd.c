@@ -15,8 +15,6 @@
  *           Bell Labs Innovations for Lucent Technologies
  *           mmclennan@lucent.com
  *           http://www.tcltk.com/itcl
- *
- *     RCS:  $Id: itkCmd.c,v 1.1.2.1 2007/09/08 12:03:22 wiede Exp $
  * ========================================================================
  *           Copyright (c) 1993-1998  Lucent Technologies, Inc.
  * ------------------------------------------------------------------------
@@ -58,8 +56,8 @@ Itk_ConfigBodyCmd(
     int result = TCL_OK;
 
     char *token;
-    char *head;
-    char *tail;
+    const char *head;
+    const char *tail;
     ItclClass *iclsPtr;
     ItclMemberCode *mcode;
     ItkClassOptTable *optTable;

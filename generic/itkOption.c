@@ -15,8 +15,6 @@
  *           Bell Labs Innovations for Lucent Technologies
  *           mmclennan@lucent.com
  *           http://www.tcltk.com/itcl
- *
- *     RCS:  $Id: itkOption.c,v 1.1.2.4 2008/10/19 16:56:34 wiede Exp $
  * ========================================================================
  *           Copyright (c) 1993-1998  Lucent Technologies, Inc.
  * ------------------------------------------------------------------------
@@ -375,7 +373,7 @@ ItkTraceClassDestroy(
      *  If it is found, delete all the option records and tear
      *  down the table.
      */
-    itkClasses = ItkGetClassesWithOptInfo(iclsPtr->interp);
+    itkClasses = ItkGetClassesWithOptInfo(interp);
     entry = Tcl_FindHashEntry(itkClasses, (char*)iclsPtr);
     if (entry) {
         optTable = (ItkClassOptTable*)Tcl_GetHashValue(entry);
@@ -487,7 +485,7 @@ Itk_CreateClassOption(
 ItkClassOption*
 Itk_FindClassOption(
     ItclClass *iclsPtr,            /* class containing this option */
-    char *switchName)              /* name of command-line switch */
+    const char *switchName)        /* name of command-line switch */
 {
     ItkClassOption *opt = NULL;
 

@@ -15,8 +15,6 @@
  *           Bell Labs Innovations for Lucent Technologies
  *           mmclennan@lucent.com
  *           http://www.tcltk.com/itcl
- *
- *     RCS:  $Id: itkBase.c,v 1.1.2.3 2008/12/31 22:56:47 wiede Exp $
  * ========================================================================
  *           Copyright (c) 1993-1998  Lucent Technologies, Inc.
  * ------------------------------------------------------------------------
@@ -25,7 +23,7 @@
  */
 #include "itkInt.h"
 
-extern struct ItkStubAPI itkStubAPI;
+MODULE_SCOPE const ItkStubs itkStubs;
 /*  
  * The following script is used to initialize Itcl in a safe interpreter.
  */
@@ -234,7 +232,7 @@ fprintf(stderr, "ERROR in loading Itcl!%s!\n", Tcl_GetStringResult(interp));
      */
 
     return Tcl_PkgProvideEx(interp, "itk", ITK_PATCH_LEVEL,
-            (ClientData) &itkStubAPI);
+            (ClientData) &itkStubs);
 }
 
 /*
