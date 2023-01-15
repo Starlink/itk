@@ -133,6 +133,7 @@ TCL_BIN_DIR	= @TCL_BIN_DIR@
 TCL_SRC_DIR	= @TCL_SRC_DIR@
 TK_SRC_DIR	= @TK_SRC_DIR@
 TK_BIN_DIR	= @TK_BIN_DIR@
+ITCL_TOOLS_DIR	= @itcl_SRC_DIR@/tools
 
 # Not used, but retained for reference of what libs Tcl required
 TCL_LIBS	= @TCL_LIBS@
@@ -232,7 +233,7 @@ install-doc: doc
 	done
 
 test: binaries libraries
-	$(WISH) `@CYGPATH@ $(srcdir)/tests/all.tcl` -load "package require itk $(PACKAGE_VERSION)" $(TESTFLAGS)
+	$(WISH) `@CYGPATH@ $(srcdir)/tests/all.tcl` -load "package require -exact itk $(PACKAGE_VERSION)" $(TESTFLAGS)
 
 shell: binaries libraries
 	@$(WISH) $(SCRIPT)
@@ -429,10 +430,9 @@ uninstall-binaries:
 	  rm -f $(DESTDIR)$(bindir)/$$p; \
 	done
 
-genstubs: $(srcdir)/tools/genStubs.tcl $(srcdir)/generic/itk.decls
-	@echo $(TCLSH) $(srcdir)/tools/genStubs.tcl $(srcdir)/generic $(srcdir)/generic/itk.decls
-	@$(TCLSH) $(srcdir)/tools/genStubs.tcl $(srcdir)/generic $(srcdir)/generic/itk.decls
-
+genstubs: $(ITCL_TOOLS_DIR)/genStubs.tcl $(srcdir)/generic/itk.decls
+	@echo $(TCLSH) $(ITCL_TOOLS_DIR)/genStubs.tcl $(srcdir)/generic $(srcdir)/generic/itk.decls
+	@$(TCLSH) $(ITCL_TOOLS_DIR)/genStubs.tcl $(srcdir)/generic $(srcdir)/generic/itk.decls
 
 .PHONY: all binaries clean depend distclean doc install libraries test
 

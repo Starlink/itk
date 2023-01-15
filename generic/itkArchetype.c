@@ -32,6 +32,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 #include <assert.h>
+#include <tclInt.h>
 #include "itkInt.h"
 
 int _itcl_debug_level = 0;
@@ -65,14 +66,8 @@ struct NameProcMap { const char *name; Tcl_ObjCmdProc *proc; };
  */
 
 static const struct NameProcMap archetypeCmds[] = {
-    { "::itcl::builtin::Archetype::cget", Itk_ArchCgetCmd },
-    { "::itcl::builtin::Archetype::component", Itk_ArchCompAccessCmd },
-    { "::itcl::builtin::Archetype::configure", Itk_ArchConfigureCmd },
     { "::itcl::builtin::Archetype::delete", Itk_ArchDeleteOptsCmd },
     { "::itcl::builtin::Archetype::init", Itk_ArchInitOptsCmd },
-    { "::itcl::builtin::Archetype::itk_component", Itk_ArchComponentCmd },
-    { "::itcl::builtin::Archetype::itk_initialize", Itk_ArchInitCmd },
-    { "::itcl::builtin::Archetype::itk_option", Itk_ArchOptionCmd },
     { NULL, NULL }
 };
 
@@ -92,7 +87,6 @@ Itk_ArchetypeInit(
     ArchMergeInfo *mergeInfo;
     Tcl_Namespace *parserNs;
     Tcl_Namespace *nsPtr;
-    Tcl_Command cmd;
     int i;
 
     /*
@@ -146,8 +140,7 @@ Itk_ArchetypeInit(
 if (nsPtr == NULL) {
 fprintf(stderr, "error in creating namespace: ::itcl::builtin::Archetype \n");
 }
-    cmd = Tcl_CreateEnsemble(interp, nsPtr->fullName, nsPtr,
-       TCL_ENSEMBLE_PREFIX);
+    Tcl_CreateEnsemble(interp, nsPtr->fullName, nsPtr, TCL_ENSEMBLE_PREFIX);
     Tcl_Export(interp, nsPtr, "[a-z]*", 1);
     for (i=0 ; archetypeCmds[i].name!=NULL ; i++) {
         Tcl_CreateObjCommand(interp, archetypeCmds[i].name,
@@ -267,6 +260,7 @@ Itk_ArchInitOptsCmd(
     ItclObject *contextObj;
     Tcl_HashTable *objsWithArchInfo;
     Tcl_HashEntry *entry;
+    Tcl_CmdInfo cmdInfo;
 
     ItclShowArgs(2, "Itk_ArchInitOptsCmd", objc, objv);
     if (objc != 1) {
@@ -312,7 +306,6 @@ Itk_ArchInitOptsCmd(
      */
     result = TCL_OK;
 
-    Tcl_CmdInfo cmdInfo;
     Tcl_GetCommandInfoFromToken(contextObj->accessCmd, &cmdInfo);
     if (cmdInfo.namespacePtr != Tcl_GetGlobalNamespace(interp)) {
         Tcl_Obj *oldNamePtr, *newNamePtr;
@@ -417,23 +410,23 @@ Itk_ArchComponentCmd(
     char *token;
     char c;
     int length;
+    Tcl_DString buffer;
+    const char *head;
+    const char *tail;
 
     ItclShowArgs(2, "Itk_ArchComponentCmd", objc, objv);
     /*
      *  Check arguments and handle the various options...
      */
-    Tcl_DString buffer;
-    const char *head;
-    const char *tail;
     cmd = Tcl_GetString(objv[0]);
     Itcl_ParseNamespPath(cmd, &buffer, &head, &tail);
-    Tcl_DStringFree(&buffer);
     if (objc < 2) {
         Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
             "wrong # args: should be one of...\n",
             "  ", tail, " add ?-protected? ?-private? ?--? name createCmds ?optionCmds?\n",
             "  ", tail, " delete name ?name name...?",
             (char*)NULL);
+	Tcl_DStringFree(&buffer);
         return TCL_ERROR;
     }
 
@@ -452,8 +445,10 @@ Itk_ArchComponentCmd(
 		" add ?-protected? ?-private? ?--?",
 		" name createCmds ?optionCmds?\"",
                 (char*)NULL);
+	    Tcl_DStringFree(&buffer);
             return TCL_ERROR;
         }
+	Tcl_DStringFree(&buffer);
         return Itk_ArchCompAddCmd(dummy, interp, objc-1, objv+1);
     } else {
 
@@ -467,11 +462,14 @@ Itk_ArchComponentCmd(
                     tail,
 		    " delete name ?name name...?\"",
                     (char*)NULL);
+		    Tcl_DStringFree(&buffer);
                 return TCL_ERROR;
             }
+	    Tcl_DStringFree(&buffer);
             return Itk_ArchCompDeleteCmd(dummy, interp, objc-1, objv+1);
         }
     }
+    Tcl_DStringFree(&buffer);
 
     /*
      *  Flag any errors.
@@ -530,9 +528,6 @@ Itk_ArchInitCmd(dummy, interp, objc, objv)
     ItclVariable *ivPtr;
     Tcl_HashSearch place;
     Tcl_HashEntry *entry;
-    ItclObjectInfo *infoPtr;
-    ItclCallContext *callContextPtr;
-    Tcl_HashEntry *hPtr;
 
     ItclShowArgs(2, "Itk_ArchInitCmd", objc, objv);
     contextClass = NULL;
@@ -548,8 +543,6 @@ Itk_ArchInitCmd(dummy, interp, objc, objv)
         return TCL_ERROR;
     }
 
-    infoPtr = (ItclObjectInfo *)Tcl_GetAssocData(interp,
-            ITCL_INTERP_DATA, NULL);
     if (Itk_GetArchInfo(interp, contextObj, &info) != TCL_OK) {
         return TCL_ERROR;
     }
@@ -558,16 +551,6 @@ Itk_ArchInitCmd(dummy, interp, objc, objv)
      *  See what class is being initialized by getting the namespace
      *  for the calling context.
      */
-    infoPtr = Tcl_GetAssocData(interp, ITCL_INTERP_DATA, NULL);
-    callContextPtr = Itcl_GetStackValue(&infoPtr->contextStack,
-            Itcl_GetStackSize(&infoPtr->contextStack)-2);
-    hPtr = Tcl_FindHashEntry(
-            &callContextPtr->ioPtr->iclsPtr->infoPtr->namespaceClasses,
-            (char *)callContextPtr->nsPtr);
-    if (hPtr != NULL) {
-        contextClass = (ItclClass *)Tcl_GetHashValue(hPtr);
-    }
-
 
     /*
      *  Integrate all public variables for the current class
@@ -575,11 +558,24 @@ Itk_ArchInitCmd(dummy, interp, objc, objv)
      */
     Itcl_InitHierIter(&hier, contextClass);
     while ((iclsPtr=Itcl_AdvanceHierIter(&hier)) != NULL) {
-        entry = Tcl_FirstHashEntry(&iclsPtr->variables, &place);
-        while (entry) {
+
+	for (entry = Tcl_FirstHashEntry(&iclsPtr->variables, &place);
+		entry; entry = Tcl_NextHashEntry(&place)) {
+	    Var *arrayPtr, *varPtr = NULL;
+
             ivPtr = (ItclVariable*)Tcl_GetHashValue(entry);
 
-            if (ivPtr->protection == ITCL_PUBLIC) {
+            if (ivPtr->protection != ITCL_PUBLIC) {
+		continue;
+	    }
+
+	    varPtr = TclObjLookupVar(interp, ivPtr->fullNamePtr, NULL, 0,
+		    NULL, 0, 0, &arrayPtr);
+
+	    if (varPtr && TclIsVarArray(varPtr)) {
+		continue;
+	    }
+
                 optPart = Itk_FindArchOptionPart(info,
                     Tcl_GetString(ivPtr->namePtr), (ClientData)ivPtr);
 
@@ -589,8 +585,8 @@ Itk_ArchInitCmd(dummy, interp, objc, objv)
                         (ClientData)ivPtr);
 
                     val = Itcl_GetInstanceVar(interp,
-		            Tcl_GetString(ivPtr->fullNamePtr),
-                            contextObj, contextObj->iclsPtr);
+		            Tcl_GetString(ivPtr->namePtr),
+                            contextObj, iclsPtr);
 
                     result = Itk_AddOptionPart(interp, info,
                             Tcl_GetString(ivPtr->namePtr),
@@ -602,8 +598,6 @@ Itk_ArchInitCmd(dummy, interp, objc, objv)
                         return TCL_ERROR;
                     }
                 }
-            }
-            entry = Tcl_NextHashEntry(&place);
         }
     }
     Itcl_DeleteHierIter(&hier);
@@ -876,22 +870,8 @@ Itk_ArchCompAccessCmd(
         return TCL_ERROR;
     }
 
-    ItclObjectInfo *infoPtr;
-    infoPtr = (ItclObjectInfo *)Tcl_GetAssocData(interp,
-            ITCL_INTERP_DATA, NULL);
-    if (Itcl_GetStackSize(&infoPtr->contextStack) == 1) {
-        callingNs = Tcl_GetGlobalNamespace(interp);
-    } else {
-	ItclCallContext *callContextPtr;
-	callContextPtr = Itcl_GetStackValue(&infoPtr->contextStack,
-	        Itcl_GetStackSize(&infoPtr->contextStack)-2);
-#ifdef NOTDEF
-        callingNs = (Tcl_Namespace *)Itcl_GetStackValue(
-	        &infoPtr->namespaceStack,
-		Itcl_GetStackSize(&infoPtr->namespaceStack)-2);
-#endif
-        callingNs = callContextPtr->nsPtr;
-    }
+    callingNs = Tcl_GetCurrentNamespace(interp);
+
     /*
      *  With no arguments, return a list of components that can be
      *  accessed from the calling scope.
@@ -951,23 +931,26 @@ fprintf(stderr, "ERR 2 archComp == NULL\n");
      *  window name for this component.
      */
     if (objc == 2) {
-	Tcl_Obj *objPtr;
-	objPtr = Tcl_NewObj();
-	Tcl_GetCommandFullName(interp, archComp->accessCmd, objPtr);
-	Tcl_IncrRefCount(objPtr);
-	Tcl_DString buffer;
-	Tcl_DStringInit(&buffer);
-	Tcl_DStringAppend(&buffer, ITCL_VARIABLES_NAMESPACE, -1);
-	Tcl_DStringAppend(&buffer, Tcl_GetString(objPtr), -1);
-	Tcl_DecrRefCount(objPtr);
-	Tcl_DStringAppend(&buffer, archComp->iclsPtr->nsPtr->fullName, -1);
-	Tcl_Namespace *nsPtr;
-	Tcl_CallFrame frame;
-	nsPtr = Tcl_FindNamespace(interp, Tcl_DStringValue(&buffer), NULL, 0);
-	Itcl_PushCallFrame(interp, &frame, nsPtr, /*isProcCallFrame*/0);
+
+	/*
+ 	 * This is moderately ugly.  We want to resolve the instance
+ 	 * variable "itk_component".  We have the contextObj context,
+ 	 * but the only way to make that context control variable
+ 	 * resolution is to force the context namespace to be the class
+ 	 * namespace of the contextObj, while at the same time, not
+ 	 * pushing any frame, so that the same contextObj context is
+ 	 * still in force, when that custom resolver attached to that
+ 	 * namespace finally gets the chance to resolve.
+ 	 *
+ 	 * Instance variable resolution, even (especially?) in C code,
+ 	 * shouldn't need quite so many contortions.
+ 	 */
+
+	Tcl_Namespace *save = Tcl_GetCurrentNamespace(interp);
+
+	Itcl_SetCallFrameNamespace(interp, contextObj->iclsPtr->nsPtr);
         val = Tcl_GetVar2(interp, "itk_component", token, 0);
-	Tcl_DStringFree(&buffer);
-	Itcl_PopCallFrame(interp);
+	Itcl_SetCallFrameNamespace(interp, save);
         if (!val) {
             Tcl_ResetResult(interp);
             Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
@@ -1085,7 +1068,9 @@ Itk_ArchConfigureCmd(
 
         for (i=0; i < info->order.len; i++) {
             archOpt = (ArchOption*)Tcl_GetHashValue(info->order.list[i]);
-            val = Tcl_GetVar2(interp, "itk_option", archOpt->switchName, 0);
+
+	    val = ItclGetInstanceVar(interp, "itk_option", archOpt->switchName,
+		    contextObj, contextClass);
             if (!val) {
                 Itk_ArchOptAccessError(interp, info, archOpt);
                 Tcl_DStringFree(&buffer);
@@ -1124,7 +1109,9 @@ Itk_ArchConfigureCmd(
             }
 
             archOpt = (ArchOption*)Tcl_GetHashValue(entry);
-            val = Tcl_GetVar2(interp, "itk_option", archOpt->switchName, 0);
+
+	    val = ItclGetInstanceVar(interp, "itk_option", archOpt->switchName,
+		    contextObj, contextClass);
             if (!val) {
                 Itk_ArchOptAccessError(interp, info, archOpt);
                 return TCL_ERROR;
@@ -1148,6 +1135,8 @@ Itk_ArchConfigureCmd(
      */
     for (objc--,objv++; objc > 0; objc-=2, objv+=2) {
 	char *value;
+	int code;
+//	Tcl_Namespace *save = Tcl_GetCurrentNamespace(interp);
         token = Tcl_GetString(objv[0]);
         if (objc < 2) {
             Tcl_AppendStringsToObj(Tcl_GetObjResult(interp),
@@ -1157,7 +1146,10 @@ Itk_ArchConfigureCmd(
         }
         value = Tcl_GetString(objv[1]);
 
-        if (Itk_ArchConfigOption(interp, info, token, value) != TCL_OK) {
+//	Itcl_SetCallFrameNamespace(interp, contextObj->iclsPtr->nsPtr);
+        code = Itk_ArchConfigOption(interp, info, token, value);
+//	Itcl_SetCallFrameNamespace(interp, save);
+        if (code != TCL_OK) {
             return TCL_ERROR;
         }
     }
@@ -1193,6 +1185,7 @@ Itk_ArchCgetCmd(
     ArchInfo *info;
     Tcl_HashEntry *entry;
     ArchOption *archOpt;
+    Tcl_Namespace *save = Tcl_GetCurrentNamespace(interp);
 
     ItclShowArgs(2, "Itk_ArchCgetCmd", objc, objv);
     contextClass = NULL;
@@ -1229,7 +1222,9 @@ Itk_ArchCgetCmd(
     }
 
     archOpt = (ArchOption*)Tcl_GetHashValue(entry);
+    Itcl_SetCallFrameNamespace(interp, contextObj->iclsPtr->nsPtr);
     val = Tcl_GetVar2(interp, "itk_option", archOpt->switchName, 0);
+    Itcl_SetCallFrameNamespace(interp, save);
     if (!val) {
         Itk_ArchOptAccessError(interp, info, archOpt);
         return TCL_ERROR;
