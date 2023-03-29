@@ -5922,7 +5922,7 @@ done
 
 
 
-    vars="generic/itk.h generic/itkInt.h"
+    vars="generic/itk.h generic/itkInt.h generic/itkDecls.h"
     for i in $vars; do
 	# check for existence, be strict because it is installed
 	if test ! -f "${srcdir}/$i" ; then
