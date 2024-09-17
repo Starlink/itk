@@ -6,7 +6,7 @@ config.log
 config.status
 configure.lineno
 itkConfig.sh
-libitk3.4.*
+libitk4.1.*
 pkgIndex.tcl
 *.dylib
 *.dSYM
